@@ -26,12 +26,17 @@ static int randomLevel() {
 	return level;
 }
 
+int skiplist_size(PSkipList list) {
+	return list->size;
+}
+
 PSkipList skiplist_create() {
 	PSkipList list = (PSkipList)malloc(sizeof(SkipList));
 	if (list == NULL) {
 		return NULL;
 	}
 	list->max_level = 0;
+	list->size = 0;
 	list->head = (PSkipListNode)malloc(sizeof(SkipListNode));
 	list->head->key = MIN_KEY;
 	list->head->next = NULL;
@@ -64,6 +69,7 @@ int skiplist_add_elem(PSkipList list, int64_t key, void* newelem) {
 		current->next->data = newelem;
 		current->next->forward = NULL; //be careful when add
 		current->next->next = next;
+		list->size++;
 		return 0;
 	}//else not exist,add new node
 	PSkipListNode node = (PSkipListNode)malloc(sizeof(SkipListNode));
@@ -90,6 +96,7 @@ int skiplist_add_elem(PSkipList list, int64_t key, void* newelem) {
 		node->forward[i] = rightmost[i]->forward[i];
 		rightmost[i]->forward[i] = node;
 	}
+	list->size++;
 	return 0;
 }
 
@@ -114,6 +121,7 @@ int skiplist_del_elem(PSkipList list, int64_t key) {
 			PSkipListNode next = current->next;
 			free(current);
 			current = next;
+			list->size--;
 		}
 	}
 	while(list->max_level>0 && rightmost[list->max_level]->forward[list->max_level] == NIL) {
@@ -164,6 +172,7 @@ void skiplist_clear(PSkipList list) {
 			list->head->forward[i] = NIL;
 		}
 		list->max_level = 0;
+		list->size = 0;
 	}
 }
 
