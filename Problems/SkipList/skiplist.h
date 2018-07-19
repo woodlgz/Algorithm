@@ -6,37 +6,37 @@
 extern "C" {
 #endif
 
-	typedef void(*SkipListTraverseFunc)(int, int64_t, void*);
+	typedef void(*skipList_traverse_func_t)(int, int64_t, void*);
 
-	typedef struct SkipList_Node_t {
+	typedef struct skiplist_node_t {
 		int64_t key;
 		void* data;
-		struct SkipList_Node_t** forward;
-		struct SkipList_Node_t* next;
-	} SkipListNode, *PSkipListNode;
+		struct skiplist_node_t** forward;
+		struct skiplist_node_t* next;
+	} skiplist_node_t;
 
-	typedef struct SkipList_t {
+	typedef struct skiplist_t {
 		int max_level;
-		PSkipListNode head;
+		skiplist_node_t* head;
 		int size;
-	} SkipList, *PSkipList;
+	} skiplist_t;
 
 
-	PSkipList skiplist_create();
+	skiplist_t* skiplist_create();
 
-	void skiplist_destroy(PSkipList list);
+	void skiplist_destroy(skiplist_t* list);
 
-	int skiplist_add_elem(PSkipList list, int64_t key, void* newelem);
+	int skiplist_add_elem(skiplist_t* list, int64_t key, void* newelem);
 
-	int skiplist_del_elem(PSkipList list, int64_t key);
+	int skiplist_del_elem(skiplist_t* list, int64_t key);
 
-	PSkipListNode skiplist_search(PSkipList list, int64_t key);
+	skiplist_node_t* skiplist_search(skiplist_t* list, int64_t key);
 
-	void skiplist_clear(PSkipList list);
+	void skiplist_clear(skiplist_t* list);
 
-	void skiplist_traverse(PSkipList list, SkipListTraverseFunc traverse_func);
+	void skiplist_traverse(skiplist_t* list, skipList_traverse_func_t traverse_func);
 
-	int skiplist_size(PSkipList list);
+	int skiplist_size(skiplist_t* list);
 
 #ifdef __cplusplus
 }

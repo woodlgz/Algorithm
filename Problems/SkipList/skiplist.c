@@ -6,14 +6,14 @@
 //跳表最大层次
 #define SKIPLIST_MAX_LEVEL  16
 //跳表层次概率P,百分比
-#define SKIPLIST_LEVEL_PROBABILITY  50
+#define SKIPLIST_LEVEL_PROBABILITY  25
 
 #define MAX_KEY  (int64_t)(0X7FFFFFFFFFFFFFFF)
 
 #define MIN_KEY  (int64_t)(0X8000000000000001)
 
-static SkipListNode NIL_ = { MAX_KEY, NULL, NULL, NULL };
-static PSkipListNode NIL = &NIL_;
+static skiplist_node_t NIL_ = { MAX_KEY, NULL, NULL, NULL };
+static skiplist_node_t* NIL = &NIL_;
 
 static int randomLevel() {
 	srand(time(NULL));
@@ -26,42 +26,42 @@ static int randomLevel() {
 	return level;
 }
 
-int skiplist_size(PSkipList list) {
+int skiplist_size(skiplist_t* list) {
 	return list->size;
 }
 
-PSkipList skiplist_create() {
-	PSkipList list = (PSkipList)malloc(sizeof(SkipList));
+skiplist_t* skiplist_create() {
+	skiplist_t* list = (skiplist_t*)malloc(sizeof(skiplist_t));
 	if (list == NULL) {
 		return NULL;
 	}
 	list->max_level = 0;
 	list->size = 0;
-	list->head = (PSkipListNode)malloc(sizeof(SkipListNode));
+	list->head = (skiplist_node_t*)malloc(sizeof(skiplist_node_t));
 	list->head->key = MIN_KEY;
 	list->head->next = NULL;
-	list->head->forward = (PSkipListNode*)malloc(sizeof(PSkipListNode)*(SKIPLIST_MAX_LEVEL + 1));
+	list->head->forward = (skiplist_node_t**)malloc(sizeof(skiplist_node_t*)*(SKIPLIST_MAX_LEVEL + 1));
 	for (int i = 0; i <= SKIPLIST_MAX_LEVEL; i++) {
 		list->head->forward[i] = NIL;
 	}
 	return list;
 }
 
-int skiplist_add_elem(PSkipList list, int64_t key, void* newelem) {
+int skiplist_add_elem(skiplist_t* list, int64_t key, void* newelem) {
 	//search first
 	if (list == NULL || key == MAX_KEY || key == MIN_KEY) {
 		return -1;
 	}
-	PSkipListNode rightmost[SKIPLIST_MAX_LEVEL];
-	PSkipListNode current = list->head;
+	skiplist_node_t* rightmost[SKIPLIST_MAX_LEVEL];
+	skiplist_node_t* current = list->head;
 	for (int i = list->max_level; i > 0; i--) {
 		for (; current->forward[i]->key < key; current = current->forward[i]);
 		rightmost[i] = current;
 	}
 	current = current->forward[1];
 	if (current->key == key) { //find existed,add to bucket
-		PSkipListNode next = current->next;
-		current->next = (PSkipListNode)malloc(sizeof(SkipListNode));
+		skiplist_node_t* next = current->next;
+		current->next = (skiplist_node_t*)malloc(sizeof(skiplist_node_t));
 		if (current->next == NULL) {
 			return -1;
 		}
@@ -72,7 +72,7 @@ int skiplist_add_elem(PSkipList list, int64_t key, void* newelem) {
 		list->size++;
 		return 0;
 	}//else not exist,add new node
-	PSkipListNode node = (PSkipListNode)malloc(sizeof(SkipListNode));
+	skiplist_node_t* node = (skiplist_node_t*)malloc(sizeof(skiplist_node_t));
 	if (node == NULL) {
 		return -1;
 	}
@@ -81,7 +81,7 @@ int skiplist_add_elem(PSkipList list, int64_t key, void* newelem) {
 	node->key = key;
 	node->next = NULL;
 	int level = randomLevel();
-	node->forward = (PSkipListNode*)malloc(sizeof(PSkipListNode)*(level+1));
+	node->forward = (skiplist_node_t**)malloc(sizeof(skiplist_node_t*)*(level+1));
 	if (node->forward == NULL) {
 		free(node);
 		return -1;
@@ -100,12 +100,12 @@ int skiplist_add_elem(PSkipList list, int64_t key, void* newelem) {
 	return 0;
 }
 
-int skiplist_del_elem(PSkipList list, int64_t key) {
+int skiplist_del_elem(skiplist_t* list, int64_t key) {
 	if (list == NULL || key == MAX_KEY || key == MIN_KEY) {
 		return -1;
 	}
-	PSkipListNode rightmost[SKIPLIST_MAX_LEVEL];
-	PSkipListNode current = list->head;
+	skiplist_node_t* rightmost[SKIPLIST_MAX_LEVEL];
+	skiplist_node_t* current = list->head;
 	for (int i = list->max_level; i > 0; i--) {
 		for (; current->forward[i]->key < key; current = current->forward[i]);
 		rightmost[i] = current;
@@ -118,7 +118,7 @@ int skiplist_del_elem(PSkipList list, int64_t key) {
 			}
 		}
 		while (current != NULL) { //free bucket
-			PSkipListNode next = current->next;
+			skiplist_node_t* next = current->next;
 			free(current);
 			current = next;
 			list->size--;
@@ -130,11 +130,11 @@ int skiplist_del_elem(PSkipList list, int64_t key) {
 	return 0;
 }
 
-PSkipListNode skiplist_search(PSkipList list, int64_t key) {
+skiplist_node_t* skiplist_search(skiplist_t* list, int64_t key) {
 	if (list == NULL || key == MAX_KEY || key == MIN_KEY) {
 		return NULL;
 	}
-	PSkipListNode current = list->head;
+	skiplist_node_t* current = list->head;
 	for (int i = list->max_level; i > 0; i--) {
 		for (; current->forward[i]->key < key; current = current->forward[i]);
 	}
@@ -147,13 +147,13 @@ PSkipListNode skiplist_search(PSkipList list, int64_t key) {
 	}
 }
 
-void skiplist_clear(PSkipList list) {
+void skiplist_clear(skiplist_t* list) {
 	if (list != NULL) {
-		PSkipListNode current = list->head->forward[1];
+		skiplist_node_t* current = list->head->forward[1];
 		while (current != NIL) {
-			PSkipListNode forward = current->forward[1];
+			skiplist_node_t* forward = current->forward[1];
 			if (current->next != NULL) { //clear bucket
-				PSkipListNode next = current->next;
+				skiplist_node_t* next = current->next;
 				if (current->forward != NULL) {
 					free(current->forward);
 					current->forward = NULL;
@@ -176,7 +176,7 @@ void skiplist_clear(PSkipList list) {
 	}
 }
 
-void skiplist_destroy(PSkipList list) {
+void skiplist_destroy(skiplist_t* list) {
 	if (list != NULL) {
 		skiplist_clear(list);
 		free(list->head);
@@ -184,17 +184,17 @@ void skiplist_destroy(PSkipList list) {
 	}
 }
 
-void skiplist_traverse(PSkipList list, SkipListTraverseFunc traverse_func) {
+void skiplist_traverse(skiplist_t* list, skipList_traverse_func_t traverse_func) {
 	if (list == NULL) {
 		return;
 	}
-	PSkipListNode current = list->head->forward[1];
+	skiplist_node_t* current = list->head->forward[1];
 	int rank = 0;
 	while (current != NIL) {
 		rank++;
-		PSkipListNode forward = current->forward[1];
+		skiplist_node_t* forward = current->forward[1];
 		if (current->next != NULL) {
-			PSkipListNode next = current->next;
+			skiplist_node_t* next = current->next;
 			traverse_func(rank, current->key, current->data);
 			current = next;
 		}

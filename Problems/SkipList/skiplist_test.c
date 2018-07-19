@@ -8,7 +8,7 @@ void dump(int rank, int64_t key, void* data) {
 	printf("%ld,", key);
 }
 
-void dumpSkipList(PSkipList skiplist,const char* message) {
+void dumpSkipList(skiplist_t* skiplist,const char* message) {
 	printf("%s[",message);
 	skiplist_traverse(skiplist, &dump);
 	printf("]\n");
@@ -23,7 +23,7 @@ int64_t now() {
 void pressureTest() {
 	srand(time(NULL));
 	int count = 100000;
-	PSkipList skiplist = skiplist_create();
+	skiplist_t* skiplist = skiplist_create();
 	int64_t beginTime = now();
 	for (int i = 0; i < count; i++) {
 		skiplist_add_elem(skiplist, rand(), NULL);
@@ -51,7 +51,7 @@ void pressureTest() {
 
 int main() {
 	int64_t keys[] = { 13,25,324,-124,333,2345,7889,11,-1002,98,10000,1234 };
-	PSkipList skiplist = skiplist_create();
+	skiplist_t* skiplist = skiplist_create();
 	for (int i = 0; i < sizeof(keys) / sizeof(int64_t); i++) {
 		skiplist_add_elem(skiplist, keys[i], NULL);
 	}
@@ -65,7 +65,7 @@ int main() {
 	dumpSkipList(skiplist, "after add operation again:");
 	int64_t tosearchs[] = { 1000,10000 };
 	for (int i = 0; i < sizeof(tosearchs) / sizeof(int64_t); i++) {
-		PSkipListNode node = skiplist_search(skiplist, tosearchs[i]);
+		skiplist_node_t* node = skiplist_search(skiplist, tosearchs[i]);
 		if (node == NULL) {
 			printf("node of key %ld not found\n", tosearchs[i]);
 		}
